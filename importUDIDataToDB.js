@@ -93,7 +93,7 @@ function importUDIDataToSourceTb(xlsxFile) {
 function importUDIFielsToDB() {
     let importTotal = {dbs: 0, tbs:0, newTbs: 0, files: 0, insert:0, update: 0, ignore: 0}; //导入，新增，没有被导入的结果统计
 
-    fs.readdir(myconfig.common.udiExcelFilesPath, function (err, files) {
+    fs.readdir(resolve(myconfig.common.udiExcelFilesPath), function (err, files) {
         //找到/data/tmp/目录下所有的"xlsx"文件
         let xlsxFiles = files.filter(function (e) {
             return path.extname(e).toLowerCase() === myconfig.common.udiExcelFileExt
@@ -206,7 +206,7 @@ function importSingleUDIFileToDB(xlsxFile) {
     const sqlTmplTableName = '{tbKey}';
     let insertSQLTmpl = `INSERT INTO ${sqlTmplTableName} (${sqlOfCols.join(', ')}) VALUES (${sqlOfValues.join(', ')})`;
     let updateSQLTmpl = `UPDATE ${sqlTmplTableName} SET ${sqlOfUpate.join(', ')} WHERE ID = @ID`
-    let createTableTmpl = fs.readFileSync(resolve(myconfig.common.udiTableStructFilePath)).toString();  //读取创建表的SQL文件
+    let createTableTmpl = fs.readFileSync(resolve(__dirname, myconfig.common.udiTableStructFilePath)).toString();  //读取创建表的SQL文件
 
     //插入新增的，或者更新数据库中已有的
     for (const dbName in importData) {
