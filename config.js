@@ -1,4 +1,4 @@
-//要导入的数据库SQLite表Goods结构(./struct/g.stc文件中定义)与国家药监局的EXCEL文件中的UDI表结构映射
+//要导入的数据库SQLite表Goods结构(./struct/g.stc文件中定义)与EXCEL文件中的UDI表结构映射
 const uuXlsToUUDbTbMapper = {
     ID: '主键编号',
     version: '公开的版本号',
