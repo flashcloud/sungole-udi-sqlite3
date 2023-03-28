@@ -1,0 +1,21 @@
+{
+  "name": "sungole-udi-sqlite3",
+  "version": "0.0.1",
+  "description": "UDI-SQLite3数据库",
+  "main": "importUDIDataToDB.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/flashcloud/sungole-udi-sqlite3.git"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "author": "sungole",
+  "license": "ISC",
+  "dependencies": {
+    "better-sqlite3": "^8.2.0",
+    "log4js": "^6.9.1",
+    "mocha": "^10.2.0",
+    "xlsx": "^0.18.5"
+  }
+}
