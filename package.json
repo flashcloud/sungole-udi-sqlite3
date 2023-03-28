@@ -1,6 +1,6 @@
 {
   "name": "sungole-udi-sqlite3",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "description": "UDI-SQLite3数据库",
   "main": "importUDIDataToDB.js",
   "repository": {
@@ -16,6 +16,7 @@
     "better-sqlite3": "^8.2.0",
     "log4js": "^6.9.1",
     "mocha": "^10.2.0",
+    "moment": "^2.29.4",
     "xlsx": "^0.18.5"
   },
   "bugs": {

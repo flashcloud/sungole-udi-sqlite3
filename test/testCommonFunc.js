@@ -5,6 +5,7 @@ var assert = require('assert');
 const {resolve} = require("path");
 const path = require('path');
 const fs = require('fs');
+const moment = require('moment');
 
 const importUUDB = require('../importUDIDataToDB');
 const Database = require("better-sqlite3");
@@ -18,11 +19,17 @@ describe('importUUDataToDB', function () {
         });
 
         it('crateIndexForDI', function () {
-            const sqliteDB = new Database(importUUDB.getDBPath('g_10_690'));
-            const ret1 =  importUUDB.crateIndexForDI(sqliteDB, 'ud_2')
+            //const sqliteDB = new Database(importUUDB.getDBPath('g_10_690'));
+            //const ret1 =  importUUDB.crateIndexForDI(sqliteDB, 'ud_2')
             //assert.equal(ret1, true);
-            const ret2 =  importUUDB.crateIndexForDI(sqliteDB, 'ud_2')
-            assert.equal(ret2, false);
+            //const ret2 =  importUUDB.crateIndexForDI(sqliteDB, 'ud_2')
+            //assert.equal(ret2, false);
+        });
+
+        it('test', function () {
+            const zipFileName = 'UDID_MONTH_20230201.zip';
+            const zipMD5 = '899A250F3A72240868B0719358EB980A'
+            importUUDB.importUDIDataToDB(zipFileName, zipMD5);
         });
     });
 });

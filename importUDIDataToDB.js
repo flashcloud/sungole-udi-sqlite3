@@ -11,6 +11,7 @@ const XLSX = require("xlsx");
 const Database = require('better-sqlite3');
 
 const myconfig = require('./config');
+const moment = require("moment/moment");
 const logger = require('./assets/js/MyLog').logger;
 
 const schema = myconfig.uuXlsToUUDbTbMapper;  //从配置文件加载数据库表结构与UDI-EXCEL表结构映射
@@ -90,7 +91,20 @@ function importUDIDataToSourceTb(xlsxFile) {
 /**
  * 导入./data/tmp文件夹下所有的UDI-EXCEL数据到指定的SQLite数据库表中
  */
-function importUDIFielsToDB() {
+function importUDIFielsToDB(zipFileName, zipMD5) {
+    let sysDb = null;
+    let requireImpt = false;
+    //当前指定的filesFingerprint是否已经导入过，如果导入过，则不再执行导入
+    if (zipMD5 !== undefined) {
+        sysDb = new Database(resolve(__dirname, './data/db/sys'));
+        const stmt = sysDb.prepare(`SELECT * FROM imptRec WHERE zipMD5 = ?`);
+        const rec = stmt.get(zipMD5);
+        if (rec != undefined) {
+            return;
+        } else
+            requireImpt = true;
+    }
+
     let importTotal = {dbs: 0, tbs:0, newTbs: 0, files: 0, insert:0, update: 0, ignore: 0}; //导入，新增，没有被导入的结果统计
 
     fs.readdir(resolve(myconfig.common.udiExcelFilesPath), function (err, files) {
@@ -123,8 +137,8 @@ function importUDIFielsToDB() {
         }
 
         if (importTotal.files > 1) {
+            //记录日志
             logger.info(`从 ${importTotal.files} 个文件中共计导入 ${importTotal.insert} 条数据；更新 ${importTotal.update} 条数据；忽略 ${importTotal.ignore} 条数据。涉及数据库 ${importTotal.dbs} 个，表 ${importTotal.tbs} 个，其中新建表 ${importTotal.newTbs} 个`);
-
             endAt = process.uptime();
             let interval = endAt - startAt;
             let usedTime = interval + '秒';
@@ -132,6 +146,16 @@ function importUDIFielsToDB() {
                 usedTime = (interval / 60) + '分';
             }
             logger.info(`本次导入结束。共计耗时 ${usedTime}`);
+
+            //在sys数据库中记录本次导入情况
+            if (requireImpt) {
+                const insertImpportRec = sysDb.prepare('INSERT INTO imptRec (importTime, zipFile, zipMD5) VALUES (@importTime, @zipFile, @zipMD5)');
+                insertImpportRec.run({
+                    "importTime": moment().format("YYYY-MM-DD HH:mm:ss"),
+                    "zipFile": zipFileName,
+                    "zipMD5": zipMD5
+                });
+            }
         }
     });
 }
