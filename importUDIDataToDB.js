@@ -487,6 +487,7 @@ module.exports = {
     importUDIDataToSourceTb: importUDIDataToSourceTb,
     importUDIDataToDB: importUDIFielsToDB,
     getDBPath: getDBPath,
+    udiExcelFilesPath: myconfig.common.udiExcelFilesPath,
     createNewDB: createNewDB,
     crateIndexForDI: crateIndexForDI,
     isUDBFile: isUDIDBFile,
