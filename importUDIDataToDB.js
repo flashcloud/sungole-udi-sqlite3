@@ -92,14 +92,14 @@ function importUDIDataToSourceTb(xlsxFile) {
 /**
  * 导入./data/tmp文件夹下所有的UDI-EXCEL数据到指定的SQLite数据库表中
  */
-function importUDIFielsToDB(zipFileName, zipMD5) {
+function importUDIFielsToDB(zipExtractPath, zipFileName, zipMD5) {
     const requireImpt = isRequiredDownloadFile(zipFileName, zipMD5);
     //当前指定的filesFingerprint是否已经导入过，如果导入过，则不再执行导入
     if (!requireImpt) return;
 
     let importTotal = {dbs: 0, tbs:0, newTbs: 0, files: 0, insert:0, update: 0, ignore: 0}; //导入，新增，没有被导入的结果统计
 
-    fs.readdir(resolve(myconfig.common.udiExcelFilesPath), function (err, files) {
+    fs.readdir(zipExtractPath, function (err, files) {
         //找到/data/tmp/目录下所有的"xlsx"文件
         let xlsxFiles = files.filter(function (e) {
             return path.extname(e).toLowerCase() === myconfig.common.udiExcelFileExt
@@ -114,7 +114,7 @@ function importUDIFielsToDB(zipFileName, zipMD5) {
 
         //插入该目录下的每个xlsx文件中的UDI数据到SQLite数据库
         for (const xlsxFile of xlsxFiles) {
-            let xlsxFilePath = path.join(myconfig.common.udiExcelFilesPath, xlsxFile)
+            let xlsxFilePath = path.join(zipExtractPath, xlsxFile)
             //importUUDB.importUToSourceTbData(xlsxFilePath);
             let result = importSingleUDIFileToDB(xlsxFilePath);
             logger.info(`从文件 ${xlsxFilePath} 导入 ${result.insert} 条数据；更新 ${result.update} 条数据；忽略 ${result.ignore} 条数据。涉及数据库 ${result.dbs} 个，表 ${result.tbs} 个，其中新建表 ${result.newTbs} 个`);
@@ -423,6 +423,7 @@ function getDBPath(dbname) {
 function getSysDB() {
     if (sysDB == null)
         sysDB =  new Database(resolve(__dirname, './data/db/sys'));
+    return sysDB;
 }
 
 /**
