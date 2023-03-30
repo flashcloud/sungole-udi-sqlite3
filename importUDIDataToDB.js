@@ -15,6 +15,7 @@ const moment = require("moment/moment");
 const logger = require('./assets/js/MyLog').logger;
 
 const schema = myconfig.uuXlsToUUDbTbMapper;  //从配置文件加载数据库表结构与UDI-EXCEL表结构映射
+let sysDB = null;
 
 /**
  * 动态创建数据库
@@ -92,18 +93,9 @@ function importUDIDataToSourceTb(xlsxFile) {
  * 导入./data/tmp文件夹下所有的UDI-EXCEL数据到指定的SQLite数据库表中
  */
 function importUDIFielsToDB(zipFileName, zipMD5) {
-    let sysDb = null;
-    let requireImpt = false;
+    const requireImpt = isRequiredDownloadFile(zipFileName, zipMD5);
     //当前指定的filesFingerprint是否已经导入过，如果导入过，则不再执行导入
-    if (zipMD5 !== undefined) {
-        sysDb = new Database(resolve(__dirname, './data/db/sys'));
-        const stmt = sysDb.prepare(`SELECT * FROM imptRec WHERE zipMD5 = ?`);
-        const rec = stmt.get(zipMD5);
-        if (rec != undefined) {
-            return;
-        } else
-            requireImpt = true;
-    }
+    if (!requireImpt) return;
 
     let importTotal = {dbs: 0, tbs:0, newTbs: 0, files: 0, insert:0, update: 0, ignore: 0}; //导入，新增，没有被导入的结果统计
 
@@ -149,7 +141,7 @@ function importUDIFielsToDB(zipFileName, zipMD5) {
 
             //在sys数据库中记录本次导入情况
             if (requireImpt) {
-                const insertImpportRec = sysDb.prepare('INSERT INTO imptRec (importTime, zipFile, zipMD5) VALUES (@importTime, @zipFile, @zipMD5)');
+                const insertImpportRec = getSysDB().prepare('INSERT INTO imptRec (importTime, zipFile, zipMD5) VALUES (@importTime, @zipFile, @zipMD5)');
                 insertImpportRec.run({
                     "importTime": moment().format("YYYY-MM-DD HH:mm:ss"),
                     "zipFile": zipFileName,
@@ -428,6 +420,11 @@ function getDBPath(dbname) {
     return resolve(myconfig.common.dataPath + dbname);
 }
 
+function getSysDB() {
+    if (sysDB == null)
+        sysDB =  new Database(resolve(__dirname, './data/db/sys'));
+}
+
 /**
  * 为UDI数据库在指定的表tbName，在UDI码的DI列(minDI)上创建一个索引
  * @param sqliteDB
@@ -448,6 +445,21 @@ function crateIndexForDI(sqliteDB, tbName) {
     } else {
         return false;
     }
+}
+
+function isRequiredDownloadFile(fileName, zipMD5) {
+    let requireImpt = false;
+    //当前指定的filesFingerprint是否已经导入过，如果导入过，则不再执行导入
+    if (zipMD5 !== undefined) {
+        const stmt = getSysDB().prepare(`SELECT * FROM imptRec WHERE zipMD5 = ?`);
+        const rec = stmt.get(zipMD5);
+        if (rec == undefined)
+            requireImpt = true;
+    } else {
+        requireImpt = true; //如果没有传入MD5值，则不检查该文件，直接导入
+    }
+
+    return requireImpt;
 }
 
 //=============================PRIVATE FUNCTION =================================
