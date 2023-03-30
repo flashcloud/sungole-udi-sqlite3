@@ -503,6 +503,7 @@ module.exports = {
     createNewDB: createNewDB,
     crateIndexForDI: crateIndexForDI,
     isUDBFile: isUDIDBFile,
+    isRequiredDownloadFile: isRequiredDownloadFile,
 
     //TODO： 以下只是为了单元测试，生产环境需要删除！！
     extractGS1DBAandTbName: extractGS1DBAandTbName,
