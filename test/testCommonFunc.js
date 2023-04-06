@@ -1,6 +1,6 @@
 'use strict';
 
-var assert = require('assert');
+const assert = require('assert');
 
 const {resolve} = require("path");
 const path = require('path');
@@ -8,6 +8,7 @@ const fs = require('fs');
 const moment = require('moment');
 
 const importUUDB = require('../importUDIDataToDB');
+const myconfig = require('../config');
 const Database = require("better-sqlite3");
 
 describe('importUUDataToDB', function () {
@@ -29,7 +30,7 @@ describe('importUUDataToDB', function () {
         it('test', function () {
             const zipFileName = 'UDID_MONTH_20230201.zip';
             const zipMD5 = '899A250F3A72240868B0719358EB980A'
-            importUUDB.importUDIDataToDB(zipFileName, zipMD5);
+            importUUDB.importUDIDataToDB(myconfig.common.udiExcelFilesPath, zipFileName, zipMD5);
         });
     });
 });
