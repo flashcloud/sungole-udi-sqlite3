@@ -128,7 +128,7 @@ function importUDIFielsToDB(unzipPath, zipFileName, zipMD5) {
             importTotal.ignore += result.ignore;
         }
 
-        if (importTotal.files > 1) {
+        if (importTotal.files > 0) {
             //记录日志
             logger.info(`从 ${importTotal.files} 个文件中共计导入 ${importTotal.insert} 条数据；更新 ${importTotal.update} 条数据；忽略 ${importTotal.ignore} 条数据。涉及数据库 ${importTotal.dbs} 个，表 ${importTotal.tbs} 个，其中新建表 ${importTotal.newTbs} 个`);
             endAt = process.uptime();
@@ -224,10 +224,14 @@ function importSingleUDIFileToDB(xlsxFile) {
     let updateSQLTmpl = `UPDATE ${sqlTmplTableName} SET ${sqlOfUpate.join(', ')} WHERE ID = @ID`
     let createTableTmpl = fs.readFileSync(resolve(__dirname, myconfig.common.udiTableStructFilePath)).toString();  //读取创建表的SQL文件
 
+    const dbOptions = {};
+    const isDev = isDevMode();
+    //if (isDev) dbOptions.verbose = console.log;
+
     //插入新增的，或者更新数据库中已有的
     for (const dbName in importData) {
         //如果没有数据库则创建
-        let db = new Database(getDBPath(dbName), {verbose: console.log});
+        let db = new Database(getDBPath(dbName), dbOptions);
         importTotal.dbs += 1;
 
         let dbTables = importData[dbName];
@@ -346,9 +350,9 @@ function extractGS1DBAandTbName(udiDI) {
             tbCode = udiDI.substring(8, 9);
         } else {
             //GTN-12、13、14编码：取N2N3N4这三位为数据库名
-            dbCode = udiDI.substring(1, 4);
+            dbCode = udiDI.substring(1, 4) + '_' + udiDI.substring(4, 5);
             GTNTypeValue = GTNType.GTN8Other;
-            tbCode = udiDI.substring(4, 5);
+            tbCode = udiDI.substring(5, 6);
         }
     }
 
@@ -400,12 +404,17 @@ function getMACodeObj(maCode){
     //解码如：MA.156.M0.100204.13351764
     const maSplitor = '.'
     const udiDIAry = maCode.split(maSplitor);
+    let isReal = true;
+    if (udiDIAry.length < 5) {
+        logger.error(`MA码 ${maCode} 似乎不符合编码规则`);
+        isReal = false;
+    }
     return  {
         issuer: udiDIAry[0], //MA发行机构：MA(2位)
         contry: udiDIAry[1], //国家代码：156(3位)
         trade:  udiDIAry[2], //行业代码：M0(2位)
         registrant: udiDIAry[3], //注册人(6位)
-        goodsCode: udiDIAry[4].substring(1, 7),  //产品编码
+        goodsCode: isReal ? udiDIAry[4].substring(1, 7) : '',  //产品编码
         issuerOfContry: `${udiDIAry[0]}${maSplitor}${udiDIAry[1]}`, //国家所在的发行机构
         ISSUER_OF_CHINA: `MA${maSplitor}156`    //中国发行机构
     }
@@ -422,7 +431,7 @@ function getDBPath(dbname) {
 
 function getSysDB() {
     if (sysDB == null)
-        sysDB =  new Database(resolve(__dirname, './data/db/sys'));
+        sysDB =  new Database(resolve('./data/db/', 'sys'));
     return sysDB;
 }
 
@@ -492,6 +501,10 @@ function getFirstNotZeroChar(str) {
     }
 
     return str.charAt(i);
+}
+
+function isDevMode() {
+    return  process.env.NODE_ENV === 'development';
 }
 
 //================================PRIVATE FUNCTION========================
