@@ -317,7 +317,7 @@ function getUDIData(udiDI, udiTypeKey) {
             return null;
         }
     } catch (e) {
-
+        logger.error(`Error retrieving data from database:  ${e.message}。udiDI="${udiDI}", udiTypeKey="${udiTypeKey}"`);
     }
 }
 
