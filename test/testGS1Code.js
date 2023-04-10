@@ -16,6 +16,13 @@ describe('importUUDataToDB', function () {
             assert.equal(ret.tbName, 'ud_1');
         });
 
+        it('extractDBAndTbName For GS1码', function () {
+            let di = '16947040920881'
+            let ret = importUUDB.extractDBAndTbName(di, 'GS1')
+            assert.equal(ret.dbName, 'g_10_694');
+            assert.equal(ret.tbName, 'ud_7');
+        });
+
         it('GTN-8编码的GS1-DI码的产品(00000078901234)UDI数据库名取DI码的N6N7N8三位：g_08_078(08代表GTN-8), 表名为数据库名的下一位数字：ud_9', function () {
             let ret = importUUDB.extractGS1DBAandTbName('00000078901234');
             assert.equal(ret.dbName, 'g_08_078');

@@ -296,6 +296,32 @@ function importSingleUDIFileToDB(xlsxFile) {
 }
 
 /**
+ * 根据指定的DI获取对应的产品数据
+ * @param udiDI 产品的DI
+ * @param udiTypeKey UDI类型，目前支持"GS1"和"MA码（IDcode）"
+ * @return {*|null}
+ */
+function getUDIData(udiDI, udiTypeKey) {
+    const importLocate = extractDBAndTbName(udiDI, udiTypeKey);
+    if (importLocate === null) return null;
+    const dbName = importLocate.dbName;
+    const tbName = importLocate.tbName;
+
+    try {
+        let db = new Database(getDBPath(dbName));
+        const stmt = db.prepare(`SELECT * FROM ${tbName} WHERE minDI = ?`);
+        const goodsRow = stmt.get(udiDI);
+        if (goodsRow != undefined) {
+            return goodsRow;
+        } else {
+            return null;
+        }
+    } catch (e) {
+
+    }
+}
+
+/**
  * 根据产品条码DI, 插入或更新及查找操作时，找到其对应的数据库名及表名。
  * @param udiDI： udi码的DI部分
  * @param udiTypeKey udi码关键字：产品标识编码体系名称(目前支持"GS1"和"MA码（IDcode）"两种值)
@@ -305,16 +331,13 @@ function extractDBAndTbName(udiDI, udiTypeKey) {
     let ret = {dbName: '', tbName: ''};
     ret = null;
 
-    switch (udiTypeKey) {
-        case myconfig.common.udiType.GS1.name: {
-            ret = extractGS1DBAandTbName(udiDI);
-            break;
-        }
-        case myconfig.common.udiType.MA.name: {
-            ret = extractMADBAandTbName(udiDI);
-            break;
-        }
-    }
+    const key = udiTypeKey.toLowerCase();
+
+    if (key === myconfig.common.udiType.GS1.name.toLowerCase())
+        ret = extractGS1DBAandTbName(udiDI);
+    else if (myconfig.common.udiType.MA.name.toLowerCase().indexOf(key) > -1)
+        ret = extractMADBAandTbName(udiDI);
+
     return ret;
 }
 
@@ -352,7 +375,7 @@ function extractGS1DBAandTbName(udiDI) {
             //GTN-12、13、14编码：取N2N3N4这三位为数据库名
             dbCode = udiDI.substring(1, 4) + '_' + udiDI.substring(4, 5);
             GTNTypeValue = GTNType.GTN8Other;
-            tbCode = udiDI.substring(5, 6);
+            tbCode = udiDI.substring(5, 7);
         }
     }
 
@@ -518,8 +541,10 @@ module.exports = {
     crateIndexForDI: crateIndexForDI,
     isUDBFile: isUDIDBFile,
     isRequiredDownloadFile: isRequiredDownloadFile,
+    getUDIData: getUDIData,
 
     //TODO： 以下只是为了单元测试，生产环境需要删除！！
+    extractDBAndTbName: extractDBAndTbName,
     extractGS1DBAandTbName: extractGS1DBAandTbName,
     getFirstNotZeroChar: getFirstNotZeroChar,
 

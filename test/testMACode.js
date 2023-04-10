@@ -17,6 +17,13 @@ describe('importUUDataToDB', function () {
             assert.equal(maObj.issuerOfContry, 'MA.156');
         });
 
+        it('extractDBAndTbName For MA码', function () {
+            let maCode = 'MB.234.M0.123456.01234567'
+            let ret = importUUDB.extractDBAndTbName(maCode, 'MA')
+            assert.equal(ret.dbName, 'm_000');
+            assert.equal(ret.tbName, 'ud_2');
+        });
+
         it('国外的产品都统一放到数据库 m_000 中，存放的数据表是MA码的国家代码第1位，如"MB.234.M0.123456.01234567"编码生成的表名(国家代码为234)为：ud_2', function () {
             let maCode = 'MB.234.M0.123456.01234567'
             let ret = importUUDB.extractMADBAandTbName(maCode);
