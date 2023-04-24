@@ -1,6 +1,6 @@
 {
   "name": "sungole-udi-sqlite3",
-  "version": "0.0.20",
+  "version": "1.0.0",
   "description": "UDI-SQLite3数据库",
   "main": "index.js",
   "repository": {
@@ -16,6 +16,7 @@
     "better-sqlite3": "^8.2.0",
     "cheerio": "^1.0.0-rc.12",
     "log4js": "^6.9.1",
+    "ma-parser": "^1.0.0",
     "mocha": "^10.2.0",
     "moment": "^2.29.4",
     "superagent": "^8.0.9",

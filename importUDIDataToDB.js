@@ -13,6 +13,7 @@ const Database = require('better-sqlite3');
 const myconfig = require('./config');
 const moment = require("moment/moment");
 const logger = require('./assets/js/MyLog').logger;
+const MA = require('ma-parser');
 
 const schema = myconfig.uuXlsToUUDbTbMapper;  //从配置文件加载数据库表结构与UDI-EXCEL表结构映射
 let sysDB = null;
@@ -314,6 +315,7 @@ function getUDIData(udiDI, udiTypeKey) {
         if (goodsRow != undefined) {
             return goodsRow;
         } else {
+            //TODO: 如果是扫描的"使用单元产品标识"呢，要不要作处理？
             return null;
         }
     } catch (e) {
@@ -402,7 +404,7 @@ function extractMADBAandTbName(udiDI) {
 
     const maCodeObj = getMACodeObj(udiDI);
 
-    if (maCodeObj.issuerOfContry == maCodeObj.ISSUER_OF_CHINA) {
+    if (maCodeObj && maCodeObj.issuerOfContry == maCodeObj.ISSUER_OF_CHINA) {
         //国内的编码：国内产品的MA码，如"MA.156.M0.100274.13360111"，放到数据库"m_1002" 表名"ud_7"
         dbCode = maCodeObj.registrant.substring(0, 4);
         tbCode = maCodeObj.registrant.substring(4, 5);
@@ -410,7 +412,7 @@ function extractMADBAandTbName(udiDI) {
         //按MA码编码规则，目前MA.156应该都是中国的编码，将此类编码以外的所有产品单独存放在一个数据库
         //国外的产品都统一放到数据库 m_000 中，存放的数据表是MA码的国家代码第1位，如"MB.234.M0.123456.01234567"编码生成的表名(国家代码为234)为：ud_2
         dbCode = '000';
-        tbCode = maCodeObj.contry.substring(0, 1);
+        tbCode = maCodeObj == null ? '000' : maCodeObj.contry.substring(0, 1);
     }
 
     returned.dbName = `${dbPrefix}${dbCode}`;
@@ -424,23 +426,7 @@ function extractMADBAandTbName(udiDI) {
  * @return {{trade: *, contry: *, ISSUER_OF_CHINA: string, registrant: *, goodsCode: string, issuer: *, issuerOfContry: string}}
  */
 function getMACodeObj(maCode){
-    //解码如：MA.156.M0.100204.13351764
-    const maSplitor = '.'
-    const udiDIAry = maCode.split(maSplitor);
-    let isReal = true;
-    if (udiDIAry.length < 5) {
-        logger.error(`MA码 ${maCode} 似乎不符合编码规则`);
-        isReal = false;
-    }
-    return  {
-        issuer: udiDIAry[0], //MA发行机构：MA(2位)
-        contry: udiDIAry[1], //国家代码：156(3位)
-        trade:  udiDIAry[2], //行业代码：M0(2位)
-        registrant: udiDIAry[3], //注册人(6位)
-        goodsCode: isReal ? udiDIAry[4].substring(1, 7) : '',  //产品编码
-        issuerOfContry: `${udiDIAry[0]}${maSplitor}${udiDIAry[1]}`, //国家所在的发行机构
-        ISSUER_OF_CHINA: `MA${maSplitor}156`    //中国发行机构
-    }
+    return MA.getMACodeObj(maCode)
 }
 
 /**
