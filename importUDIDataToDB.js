@@ -93,62 +93,74 @@ function importUDIDataToSourceTb(xlsxFile) {
 /**
  * 导入./data/tmp文件夹下所有的UDI-EXCEL数据到指定的SQLite数据库表中
  */
-function importUDIFielsToDB(unzipPath, zipFileName, zipMD5) {
+function importUDIFielsToDB(unzipPath, zipFileName, zipMD5, callback) {
     const requireImpt = isRequiredDownloadFile(zipFileName, zipMD5);
     //当前指定的filesFingerprint是否已经导入过，如果导入过，则不再执行导入
     if (!requireImpt) return;
 
+    const sysDB1 = getSysDB();
+    if (sysDB1 == null) return;
+
     let importTotal = {dbs: 0, tbs:0, newTbs: 0, files: 0, insert:0, update: 0, ignore: 0}; //导入，新增，没有被导入的结果统计
 
     fs.readdir(unzipPath, function (err, files) {
-        //找到/data/tmp/目录下所有的"xlsx"文件
-        let xlsxFiles = files.filter(function (e) {
-            return path.extname(e).toLowerCase() === myconfig.common.udiExcelFileExt
-        });
+        try {
+            //找到/data/tmp/目录下所有的"xlsx"文件
+            let xlsxFiles = files.filter(function (e) {
+                return path.extname(e).toLowerCase() === myconfig.common.udiExcelFileExt
+            });
 
-        let startAt = new Date().getTime();
-        let endAt = startAt;
-        startAt = process.uptime();
+            let startAt = new Date().getTime();
+            let endAt = startAt;
+            startAt = process.uptime();
 
-        if (xlsxFiles.length > 0)
-            logger.info('本次导入开始...')
+            if (xlsxFiles.length > 0)
+                logger.info('本次导入开始...')
 
-        //插入该目录下的每个xlsx文件中的UDI数据到SQLite数据库
-        for (const xlsxFile of xlsxFiles) {
-            let xlsxFilePath = path.join(unzipPath, xlsxFile)
-            //importUUDB.importUToSourceTbData(xlsxFilePath);
-            let result = importSingleUDIFileToDB(xlsxFilePath);
-            logger.info(`从文件 ${xlsxFilePath} 导入 ${result.insert} 条数据；更新 ${result.update} 条数据；忽略 ${result.ignore} 条数据。涉及数据库 ${result.dbs} 个，表 ${result.tbs} 个，其中新建表 ${result.newTbs} 个`);
+            //插入该目录下的每个xlsx文件中的UDI数据到SQLite数据库
+            for (const xlsxFile of xlsxFiles) {
+                let xlsxFilePath = path.join(unzipPath, xlsxFile)
+                //importUUDB.importUToSourceTbData(xlsxFilePath);
+                let result = importSingleUDIFileToDB(xlsxFilePath);
+                logger.info(`从文件 ${xlsxFilePath} 导入 ${result.insert} 条数据；更新 ${result.update} 条数据；忽略 ${result.ignore} 条数据。涉及数据库 ${result.dbs} 个，表 ${result.tbs} 个，其中新建表 ${result.newTbs} 个`);
 
-            importTotal.files += 1;
-            importTotal.dbs += result.dbs;
-            importTotal.tbs += result.tbs;
-            importTotal.newTbs += result.newTbs;
-            importTotal.insert += result.insert;
-            importTotal.update += result.update;
-            importTotal.ignore += result.ignore;
-        }
-
-        if (importTotal.files > 0) {
-            //记录日志
-            logger.info(`从 ${importTotal.files} 个文件中共计导入 ${importTotal.insert} 条数据；更新 ${importTotal.update} 条数据；忽略 ${importTotal.ignore} 条数据。涉及数据库 ${importTotal.dbs} 个，表 ${importTotal.tbs} 个，其中新建表 ${importTotal.newTbs} 个`);
-            endAt = process.uptime();
-            let interval = endAt - startAt;
-            let usedTime = interval + '秒';
-            if (interval > 60) {
-                usedTime = (interval / 60) + '分';
+                importTotal.files += 1;
+                importTotal.dbs += result.dbs;
+                importTotal.tbs += result.tbs;
+                importTotal.newTbs += result.newTbs;
+                importTotal.insert += result.insert;
+                importTotal.update += result.update;
+                importTotal.ignore += result.ignore;
             }
-            logger.info(`本次导入结束。共计耗时 ${usedTime}`);
 
-            //在sys数据库中记录本次导入情况
-            if (requireImpt) {
-                const insertImpportRec = getSysDB().prepare('INSERT INTO imptRec (importTime, zipFile, zipMD5) VALUES (@importTime, @zipFile, @zipMD5)');
-                insertImpportRec.run({
-                    "importTime": moment().format("YYYY-MM-DD HH:mm:ss"),
-                    "zipFile": zipFileName,
-                    "zipMD5": zipMD5
-                });
+            if (importTotal.files > 0) {
+                //记录日志
+                logger.info(`从 ${importTotal.files} 个文件中共计导入 ${importTotal.insert} 条数据；更新 ${importTotal.update} 条数据；忽略 ${importTotal.ignore} 条数据。涉及数据库 ${importTotal.dbs} 个，表 ${importTotal.tbs} 个，其中新建表 ${importTotal.newTbs} 个`);
+                endAt = process.uptime();
+                let interval = endAt - startAt;
+                let usedTime = interval + '秒';
+                if (interval > 60) {
+                    usedTime = (interval / 60) + '分';
+                }
+                logger.info(`本次导入结束。共计耗时 ${usedTime}`);
+
+                //在sys数据库中记录本次导入情况
+                if (requireImpt) {
+                    const insertImpportRec = sysDB1.prepare('INSERT INTO imptRec (importTime, zipFile, zipMD5) VALUES (@importTime, @zipFile, @zipMD5)');
+                    insertImpportRec.run({
+                        "importTime": moment().format("YYYY-MM-DD HH:mm:ss"),
+                        "zipFile": zipFileName,
+                        "zipMD5": zipMD5
+                    });
+                }
             }
+
+            if (callback !== undefined & callback !== null)
+                callback(true, zipFileName, importTotal.files);
+        } catch (e) {
+            logger.error(`Failed to import data from the data file extracted from the compressed package ${zipFileName}`)
+            if (callback !== undefined & callback !== null)
+                callback(false, zipFileName, 0);
         }
     });
 }
@@ -226,7 +238,7 @@ function importSingleUDIFileToDB(xlsxFile) {
     let createTableTmpl = fs.readFileSync(resolve(__dirname, myconfig.common.udiTableStructFilePath)).toString();  //读取创建表的SQL文件
 
     const dbOptions = {};
-    const isDev = isDevMode();
+    const isDev = myconfig.isDevMode();
     //if (isDev) dbOptions.verbose = console.log;
 
     //插入新增的，或者更新数据库中已有的
@@ -449,8 +461,14 @@ function getDBPath(dbname) {
 }
 
 function getSysDB() {
-    if (sysDB == null)
-        sysDB =  new Database(resolve('./data/db/', 'sys'));
+    if (sysDB == null) {
+        const sysFile = resolve(myconfig.common.sysDBPath, 'sys');
+        if (!fs.existsSync(sysFile)) {
+            logger.error(`Unable to find the "sys" db file in the specified path(${sysFile})`)
+            return null;
+        }
+        sysDB = new Database(sysFile);
+    }
     return sysDB;
 }
 
@@ -474,6 +492,17 @@ function crateIndexForDI(sqliteDB, tbName) {
     } else {
         return false;
     }
+}
+
+/**
+ * 清空导入记录
+ */
+function clearSysImptRecs() {
+    const sysDB1 = getSysDB();
+    if (sysDB1 == null) return;
+
+    const del = sysDB1.prepare('DELETE FROM imptRec');
+    del.run();
 }
 
 function isRequiredDownloadFile(fileName, zipMD5) {
@@ -522,10 +551,6 @@ function getFirstNotZeroChar(str) {
     return str.charAt(i);
 }
 
-function isDevMode() {
-    return  process.env.NODE_ENV === 'development';
-}
-
 //================================PRIVATE FUNCTION========================
 
 module.exports = {
@@ -538,6 +563,7 @@ module.exports = {
     isUDBFile: isUDIDBFile,
     isRequiredDownloadFile: isRequiredDownloadFile,
     getUDIData: getUDIData,
+    clearSysImptRecs: clearSysImptRecs,
 
     //TODO： 以下只是为了单元测试，生产环境需要删除！！
     extractDBAndTbName: extractDBAndTbName,

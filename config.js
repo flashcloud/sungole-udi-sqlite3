@@ -51,8 +51,9 @@ const  common = {
     //TODO：生产环境下，下面两变量值要更换
     //udiExcelFilesPath: '/Volumes/KingstonHyperX 1/UDIData/tmp/', //测试用：要导入的UDI-EXCEL文件存放目录
     //dataPath: '/Volumes/KingstonHyperX 1/UDIData/db/',   //测试用：导入的SQLite数据库目录
-    udiExcelFilesPath: './data/tmp/', //生产环境：要导入的UDI-EXCEL文件存放目录
-    dataPath: './data/db/',   //生产环境：导入的SQLite数据库目录
+    udiExcelFilesPath: isTestMode() ? './test/assets/data/tmp' : './data/tmp/', //生产环境：要导入的UDI-EXCEL文件存放目录
+    dataPath: isTestMode() ? './test/assets/data/db/' : './data/db/',   //生产环境：导入的SQLite数据库目录
+    sysDBPath: isTestMode() ? './test/assets/data/' : './data/',  //sys数据库的存储路径
 
     udiExcelFileExt: '.xlsx',    //要导入的UDI-EXCEL文件扩展名
 
@@ -70,7 +71,17 @@ const  common = {
         MA:  {name: 'MA码（IDcode）', dbPrefix: 'm_'}}
 };
 
+function isDevMode() {
+    return  process.env.NODE_ENV === 'development';
+}
+
+function isTestMode() {
+    return  process.env.NODE_ENV === 'test';
+}
+
 //exports.uuXlsToUUDbTbMapper = uuXlsToUUDbTbMapper;
 //exports.common = common
 module.exports.uuXlsToUUDbTbMapper = uuXlsToUUDbTbMapper;
 module.exports.common = common;
+module.exports.isDevMode = isDevMode;
+module.exports.isTestMode = isTestMode;

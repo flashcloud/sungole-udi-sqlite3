@@ -19,12 +19,9 @@ describe('importUUDataToDB', function () {
                 assert.equal(importUUDB.isUDBFile('m_1004'), true);
         });
 
-        it('crateIndexForDI', function () {
-            //const sqliteDB = new Database(importUUDB.getDBPath('g_10_690'));
-            //const ret1 =  importUUDB.crateIndexForDI(sqliteDB, 'ud_2')
-            //assert.equal(ret1, true);
-            //const ret2 =  importUUDB.crateIndexForDI(sqliteDB, 'ud_2')
-            //assert.equal(ret2, false);
+        it('clear sys db import reacords', function () {
+            myconfig.common.sysDBPath = './assets/'
+            importUUDB.clearSysImptRecs();
         });
     });
 });

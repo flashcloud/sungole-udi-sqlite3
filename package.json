@@ -1,6 +1,6 @@
 {
   "name": "sungole-udi-sqlite3",
-  "version": "1.0.2",
+  "version": "1.0.6",
   "description": "UDI-SQLite3数据库",
   "main": "index.js",
   "repository": {
