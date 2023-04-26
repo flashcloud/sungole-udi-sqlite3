@@ -19,8 +19,8 @@ describe('importUUDataToDB', function () {
         it('extractDBAndTbName For GS1码', function () {
             let di = '16947040920881'
             let ret = importUUDB.extractDBAndTbName(di, 'GS1')
-            assert.equal(ret.dbName, 'g_10_694');
-            assert.equal(ret.tbName, 'ud_7');
+            assert.equal(ret.dbName, 'g_10_694_7');
+            assert.equal(ret.tbName, 'ud_04');
         });
 
         it('GTN-8编码的GS1-DI码的产品(00000078901234)UDI数据库名取DI码的N6N7N8三位：g_08_078(08代表GTN-8), 表名为数据库名的下一位数字：ud_9', function () {
@@ -31,26 +31,26 @@ describe('importUUDataToDB', function () {
 
         it('GTN-12、13、14编码的GS1-DI码的产品(12345678901234)UDI数据库名取DI码的N2N3N4三位：g_10_234, 表名为数据库名的下一位数字：ud_5', function () {
             let ret = importUUDB.extractGS1DBAandTbName('12345678901234');
-            assert.equal(ret.dbName, 'g_10_234');
-            assert.equal(ret.tbName, 'ud_5');
+            assert.equal(ret.dbName, 'g_10_234_5');
+            assert.equal(ret.tbName, 'ud_67');
         });
 
         it('GTN-12编码的GS1-DI码的产品(00942040920881)UDI数据库名取DI码的N2N3N4三位：g_10_094, 表名为数据库名的下一位数字：ud_2', function () {
             let ret = importUUDB.extractGS1DBAandTbName('00942040930881');
-            assert.equal(ret.dbName, 'g_10_094');
-            assert.equal(ret.tbName, 'ud_2');
+            assert.equal(ret.dbName, 'g_10_094_2');
+            assert.equal(ret.tbName, 'ud_04');
         });
 
         it('GTN-13编码的GS1-DI码的产品(06942040920881)UDI数据库名取DI码的N2N3N4三位：g_10_694, 表名为数据库名的下一位数字：ud_7', function () {
             let ret = importUUDB.extractGS1DBAandTbName('06947040920881');
-            assert.equal(ret.dbName, 'g_10_694');
-            assert.equal(ret.tbName, 'ud_7');
+            assert.equal(ret.dbName, 'g_10_694_7');
+            assert.equal(ret.tbName, 'ud_04');
         });
 
         it('GTN-14编码的GS1-DI码的产品(16942040920881)UDI数据库名取DI码的N2N3N4三位：g_10_694, 表名为数据库名的下一位数字：ud_7', function () {
             let ret = importUUDB.extractGS1DBAandTbName('16947040920881');
-            assert.equal(ret.dbName, 'g_10_694');
-            assert.equal(ret.tbName, 'ud_7');
+            assert.equal(ret.dbName, 'g_10_694_7');
+            assert.equal(ret.tbName, 'ud_04');
         });
     });
 

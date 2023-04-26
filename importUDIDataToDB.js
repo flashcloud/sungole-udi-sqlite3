@@ -308,8 +308,17 @@ function getUDIData(udiDI, udiTypeKey) {
     const dbName = importLocate.dbName;
     const tbName = importLocate.tbName;
 
+    const dbFile = getDBPath(dbName);
+    if (!fs.existsSync(dbFile)) return null;    //如果数据文件不存在，则返回NULL
+    let db = null;
     try {
-        let db = new Database(getDBPath(dbName));
+        db = new Database(dbFile);
+    } catch (e) {
+        logger.error(`Error retrieving data from database. The location of the data file is ${dbFile}, and db name is ${dbName}, table name is ${tbName}. err: ${e.message}。udiDI="${udiDI}", udiTypeKey="${udiTypeKey}"`);
+        return null;
+    }
+
+    try {
         const stmt = db.prepare(`SELECT * FROM ${tbName} WHERE minDI = ?`);
         const goodsRow = stmt.get(udiDI);
         if (goodsRow != undefined) {
@@ -319,7 +328,8 @@ function getUDIData(udiDI, udiTypeKey) {
             return null;
         }
     } catch (e) {
-        logger.error(`Error retrieving data from database:  ${e.message}。udiDI="${udiDI}", udiTypeKey="${udiTypeKey}"`);
+        logger.error(`Error retrieving data from table. The location of the data file is ${dbFile}, and db name is ${dbName}, table name is ${tbName}. err: ${e.message}。udiDI="${udiDI}", udiTypeKey="${udiTypeKey}"`);
+        return null;
     }
 }
 

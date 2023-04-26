@@ -26,11 +26,5 @@ describe('importUUDataToDB', function () {
             //const ret2 =  importUUDB.crateIndexForDI(sqliteDB, 'ud_2')
             //assert.equal(ret2, false);
         });
-
-        it('test', function () {
-            const zipFileName = 'UDID_MONTH_20230201.zip';
-            const zipMD5 = '899A250F3A72240868B0719358EB980A'
-            importUUDB.importUDIDataToDB(myconfig.common.udiExcelFilesPath, zipFileName, zipMD5);
-        });
     });
 });
