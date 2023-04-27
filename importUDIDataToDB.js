@@ -14,6 +14,7 @@ const myconfig = require('./config');
 const moment = require("moment/moment");
 const logger = require('./assets/js/MyLog').logger;
 const MA = require('ma-parser');
+const dns = require("dns");
 
 const schema = myconfig.uuXlsToUUDbTbMapper;  //从配置文件加载数据库表结构与UDI-EXCEL表结构映射
 let sysDB = null;
@@ -362,6 +363,17 @@ function extractDBAndTbName(udiDI, udiTypeKey) {
     else if (myconfig.common.udiType.MA.name.toLowerCase().indexOf(key) > -1)
         ret = extractMADBAandTbName(udiDI);
 
+    let isRetIsNull = false;
+    if (ret == null) {
+        isRetIsNull = true;
+        ret = {};
+    }
+
+    ret.dataDBPath = isRetIsNull ? getDBPath() : getDBPath(ret.dbName).replace(ret.dbName, "");
+    ret.sysDBPath = '';
+    const sysDB = getSysDB();
+    if (sysDB != null)
+        ret.sysDBPath = sysDB.name;
     return ret;
 }
 
@@ -457,7 +469,7 @@ function getMACodeObj(maCode){
  * @returns {*}
  */
 function getDBPath(dbname) {
-    return resolve(myconfig.common.dataPath + dbname);
+    return resolve(myconfig.common.dataPath + (dbname == null || dbname == undefined ? '' : dbname));
 }
 
 function getSysDB() {
