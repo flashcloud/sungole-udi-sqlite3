@@ -19,6 +19,31 @@ const dns = require("dns");
 const schema = myconfig.uuXlsToUUDbTbMapper;  //从配置文件加载数据库表结构与UDI-EXCEL表结构映射
 let sysDB = null;
 
+let dataFolder = '';
+let udiExcelFilesFolder = '';
+let sysDBFolder = ''
+
+function setDataFolder(folder) {
+    dataFolder = folder;
+}
+function getDataFolder() {
+    return dataFolder == '' ? myconfig.common.dataPath : dataFolder;
+}
+
+function setUDIExcelFilesFolder(folder) {
+    udiExcelFilesFolder = folder;
+}
+function getUDIExcelFilesFolder() {
+    return udiExcelFilesFolder == '' ? myconfig.common.udiExcelFilesPath : udiExcelFilesFolder;
+}
+
+function setSysDBFolder(folder) {
+    sysDBFolder = folder;
+}
+function getSysDBFolder() {
+    return sysDBFolder == '' ? myconfig.common.sysDBPath : sysDBFolder;
+}
+
 /**
  * 动态创建数据库
  */
@@ -335,6 +360,14 @@ function getUDIData(udiDI, udiTypeKey) {
         const stmt = db.prepare(`SELECT * FROM ${tbName} WHERE minDI = ?`);
         const goodsRow = stmt.get(udiDI);
         if (goodsRow != undefined) {
+            for (const att in goodsRow) {
+                if (goodsRow[att] === null)
+                    goodsRow[att] = '';
+                //按国家药监网上下载的数据文件中，MA码显示的是"MA码（IDcode）"，需要将其转换成与主APP匹配的值"ma"
+                if (att == myconfig.common.udiType.colName && goodsRow[att].length > 0) {
+                    if (goodsRow[att] == myconfig.common.udiType.MA.name) goodsRow[att] = myconfig.common.udiType.MA.appUsedName;
+                }
+            }
             return goodsRow;
         } else {
             //TODO: 如果是扫描的"使用单元产品标识"呢，要不要作处理？
@@ -469,12 +502,12 @@ function getMACodeObj(maCode){
  * @returns {*}
  */
 function getDBPath(dbname) {
-    return resolve(myconfig.common.dataPath + (dbname == null || dbname == undefined ? '' : dbname));
+    return resolve(getDataFolder() + (dbname == null || dbname == undefined ? '' : dbname));
 }
 
 function getSysDB() {
     if (sysDB == null) {
-        const sysFile = resolve(myconfig.common.sysDBPath, 'sys');
+        const sysFile = resolve(getSysDBFolder(), 'sys');
         if (!fs.existsSync(sysFile)) {
             logger.error(`Unable to find the "sys" db file in the specified path(${sysFile})`)
             return null;
@@ -566,10 +599,16 @@ function getFirstNotZeroChar(str) {
 //================================PRIVATE FUNCTION========================
 
 module.exports = {
+    setSysDBFolder: setSysDBFolder,
+    getSysDBFolder: getSysDBFolder,
+    setDataFolder: setDataFolder,
+    getDataFolder: getDataFolder,
+    setUDIExcelFilesFolder: setUDIExcelFilesFolder,
+    getUDIExcelFilesFolder: getUDIExcelFilesFolder,
+
     importUDIDataToSourceTb: importUDIDataToSourceTb,
     importUDIDataToDB: importUDIFielsToDB,
     getDBPath: getDBPath,
-    udiExcelFilesPath: myconfig.common.udiExcelFilesPath,
     createNewDB: createNewDB,
     crateIndexForDI: crateIndexForDI,
     isUDBFile: isUDIDBFile,

@@ -5,7 +5,7 @@ const uuXlsToUUDbTbMapper = {
     vDate: '版本的发布时间',
     vStatus: '版本的状态',
     minDI: '最小销售单元产品标识',
-    DIType: '产品标识编码体系名称',
+    DIType: '产品标识编码体系名称',   //注意：改这里的名称的话，必须修改下面的common.udiType.colName
     DIDate: '产品标识发布日期',
     minQty: '最小销售单元中使用单元的数量',
     usedDI: '使用单元产品标识',
@@ -67,8 +67,9 @@ const  common = {
 
     //udi码类型，目前支持"GS1"和"MA码（IDcode）"两种值，此值必须与UDI-EXCEL表的"产品标识编码体系名称"列完全一致)
     udiType: {
-        GS1: {name: 'GS1',           dbPrefix: 'g_'},
-        MA:  {name: 'MA码（IDcode）', dbPrefix: 'm_'}}
+        colName: 'DIType',  //在UDI数据库中，存储条码制式的列名称
+        GS1: {name: 'GS1',           dbPrefix: 'g_', appUsedName: 'gs1'},
+        MA:  {name: 'MA码（IDcode）', dbPrefix: 'm_', appUsedName: 'ma'}}
 };
 
 function isDevMode() {
