@@ -15,5 +15,19 @@ describe('importUUDataToDB', function () {
             importUUDB.setSysDBFolder('./assets/');
             importUUDB.clearSysImptRecs();
         });
+
+        it('根据结构映射生成SQL SELECT 视图', function () {
+            const config =require('../config');
+            const mapper = config.uuXlsToUUDbTbMapper;
+
+            let cols = [];
+            for (const key in mapper) {
+                const item = `${key} AS [${mapper[key]}]`
+                cols.push(item);
+            }
+
+            let sql = `SELECT ${cols.join(', ')} FROM {tbName}`
+            console.log(sql);
+        });
     });
 });
